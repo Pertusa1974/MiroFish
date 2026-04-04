@@ -2,14 +2,11 @@
 LLM客户端封装
 统一使用OpenAI格式调用
 """
-
 import json
 import re
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
-
 from ..config import Config
-
 
 class LLMClient:
     """LLM客户端"""
@@ -41,13 +38,13 @@ class LLMClient:
     ) -> str:
         """
         发送聊天请求
-        
+
         Args:
             messages: 消息列表
             temperature: 温度参数
             max_tokens: 最大token数
             response_format: 响应格式（如JSON模式）
-            
+
         Returns:
             模型响应文本
         """
@@ -58,7 +55,7 @@ class LLMClient:
             "max_tokens": max_tokens,
         }
         
-        if response_format:
+        if response_format and 'gemini' not in self.model.lower():
             kwargs["response_format"] = response_format
         
         response = self.client.chat.completions.create(**kwargs)
@@ -75,12 +72,12 @@ class LLMClient:
     ) -> Dict[str, Any]:
         """
         发送聊天请求并返回JSON
-        
+
         Args:
             messages: 消息列表
             temperature: 温度参数
             max_tokens: 最大token数
-            
+
         Returns:
             解析后的JSON对象
         """
@@ -95,9 +92,7 @@ class LLMClient:
         cleaned_response = re.sub(r'^```(?:json)?\s*\n?', '', cleaned_response, flags=re.IGNORECASE)
         cleaned_response = re.sub(r'\n?```\s*$', '', cleaned_response)
         cleaned_response = cleaned_response.strip()
-
         try:
             return json.loads(cleaned_response)
         except json.JSONDecodeError:
             raise ValueError(f"LLM返回的JSON格式无效: {cleaned_response}")
-
