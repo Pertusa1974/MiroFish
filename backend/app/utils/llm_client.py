@@ -89,4 +89,16 @@ class LLMClient:
         try:
             return json.loads(cleaned_response)
         except json.JSONDecodeError:
+            # Try to salvage truncated JSON by finding balanced brace point
+            try:
+                depth = 0
+                for i, c in enumerate(cleaned_response):
+                    if c == '{':
+                        depth += 1
+                    elif c == '}':
+                        depth -= 1
+                    if depth == 0 and i > 0:
+                        return json.loads(cleaned_response[:i+1])
+            except Exception:
+                pass
             raise ValueError(f"LLM返回的JSON格式无效: {cleaned_response}")
